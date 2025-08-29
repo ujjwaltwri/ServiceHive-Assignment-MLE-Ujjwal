@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Scene Analysis API Test</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        
+        .container {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            padding: 40px;
+            max-width: 600px;
+            width: 100%;
+            text-align: center;
+        }
+        
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 2.5em;
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .subtitle {
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 1.1em;
+        }
+        
+        .upload-area {
+            border: 3px dashed #667eea;
+            border-radius: 15px;
+            padding: 40px;
+            margin: 30px 0;
+            background: rgba(102, 126, 234, 0.05);
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        
+        .upload-area:hover {
+            border-color: #764ba2;
+            background: rgba(118, 75, 162, 0.05);
+            transform: translateY(-2px);
+        }
+        
+        .upload-area.dragover {
+            border-color: #5a6fd8;
+            background: rgba(90, 111, 216, 0.1);
+            transform: scale(1.02);
+        }
+        
+        #fileInput {
+            display: none;
+        }
+        
+        .upload-text {
+            color: #667eea;
+            font-size: 1.2em;
+            margin-bottom: 10px;
+        }
+        
+        .upload-hint {
+            color: #999;
+            font-size: 0.9em;
+        }
+        
+        button {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 50px;
+            font-size: 1.1em;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin: 10px;
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+        }
+        
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.4);
+        }
+        
+        button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .result {
+            background: rgba(255, 255, 255, 0.8);
+            border-radius: 15px;
+            padding: 25px;
+            margin-top: 30px;
+            border-left: 5px solid #667eea;
+            text-align: left;
+        }
+        
+        .prediction-class {
+            font-size: 1.5em;
+            color: #333;
+            margin-bottom: 15px;
+            text-transform: capitalize;
+        }
+        
+        .metrics {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin: 20px 0;
+        }
+        
+        .metric {
+            background: rgba(102, 126, 234, 0.1);
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+        }
+        
+        .metric-label {
+            font-size: 0.9em;
+            color: #666;
+            margin-bottom: 5px;
+        }
+        
+        .metric-value {
+            font-size: 1.4em;
+            font-weight: bold;
+            color: #333;
+        }
+        
+        .description {
+            background: rgba(118, 75, 162, 0.1);
+            padding: 20px;
+            border-radius: 10px;
+            font-style: italic;
+            color: #444;
+            line-height: 1.6;
+        }
+        
+        .loading {
+            display: none;
+            color: #667eea;
+            margin-top: 20px;
+        }
+        
+        .error {
+            background: rgba(255, 82, 82, 0.1);
+            border-left: 5px solid #ff5252;
+            color: #d32f2f;
+        }
+        
+        .status-indicator {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+        
+        .status-online {
+            background: #4caf50;
+            box-shadow: 0 0 10px rgba(76, 175, 80, 0.5);
+        }
+        
+        .status-offline {
+            background: #f44336;
+        }
+        
+        .api-status {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: rgba(255, 255, 255, 0.9);
+            padding: 10px 15px;
+            border-radius: 25px;
+            font-size: 0.9em;
+            color: #333;
+        }
+    </style>
+</head>
+<body>
+    <div class="api-status" id="apiStatus">
+        <span class="status-indicator status-offline"></span>
+        Checking API...
+    </div>
+    
+    <div class="container">
+        <h1>🏞️ Scene Analysis API</h1>
+        <p class="subtitle">Upload an image to classify it into 6 scene categories</p>
+        
+        <div class="upload-area" onclick="document.getElementById('fileInput').click()" 
+             ondrop="handleDrop(event)" ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)">
+            <div class="upload-text">📸 Click to upload or drag & drop</div>
+            <div class="upload-hint">Supports JPG, PNG (buildings, forest, glacier, mountain, sea, street)</div>
+            <input type="file" id="fileInput" accept="image/*" onchange="handleFileSelect(event)">
+        </div>
+        
+        <button onclick="testHealthEndpoint()">🔍 Test Health</button>
+        <button onclick="testModelInfo()">ℹ️ Model Info</button>
+        
+        <div class="loading" id="loading">
+            🔄 Analyzing image...
+        </div>
+        
+        <div id="result"></div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:8000';
+        
+        // Check API status on page load
+        checkApiStatus();
+        
+        async function checkApiStatus() {
+            try {
+                const response = await fetch(`${API_BASE}/health`);
+                const data = await response.json();
+                const statusEl = document.getElementById('apiStatus');
+                const indicator = statusEl.querySelector('.status-indicator');
+                
+                if (response.ok && data.models_loaded) {
+                    indicator.className = 'status-indicator status-online';
+                    statusEl.innerHTML = '<span class="status-indicator status-online"></span>API Online';
+                } else {
+                    statusEl.innerHTML = '<span class="status-indicator status-offline"></span>API Issues';
+                }
+            } catch (error) {
+                const statusEl = document.getElementById('apiStatus');
+                statusEl.innerHTML = '<span class="status-indicator status-offline"></span>API Offline';
+            }
+        }
+        
+        function handleDragOver(event) {
+            event.preventDefault();
+            event.currentTarget.classList.add('dragover');
+        }
+        
+        function handleDragLeave(event) {
+            event.currentTarget.classList.remove('dragover');
+        }
+        
+        function handleDrop(event) {
+            event.preventDefault();
+            event.currentTarget.classList.remove('dragover');
+            const files = event.dataTransfer.files;
+            if (files.length > 0) {
+                uploadImage(files[0]);
+            }
+        }
+        
+        function handleFileSelect(event) {
+            const file = event.target.files[0];
+            if (file) {
+                uploadImage(file);
+            }
+        }
+        
+        async function uploadImage(file) {
+            const loadingEl = document.getElementById('loading');
+            const resultEl = document.getElementById('result');
+            
+            // Show loading
+            loadingEl.style.display = 'block';
+            resultEl.innerHTML = '';
+            
+            // Create form data
+            const formData = new FormData();
+            formData.append('file', file);
+            
+            try {
+                const response = await fetch(`${API_BASE}/predict`, {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    showResult(data);
+                } else {
+                    showError(data.detail || 'Unknown error occurred');
+                }
+            } catch (error) {
+                showError(`Network error: ${error.message}`);
+            } finally {
+                loadingEl.style.display = 'none';
+            }
+        }
+        
+        function showResult(data) {
+            const resultEl = document.getElementById('result');
+            
+            const confidenceColor = data.confidence > 80 ? '#4caf50' : 
+                                   data.confidence > 60 ? '#ff9800' : '#f44336';
+            
+            const uncertaintyLevel = data.uncertainty < 0.1 ? 'Low' :
+                                   data.uncertainty < 0.3 ? 'Medium' : 'High';
+            
+            resultEl.innerHTML = `
+                <div class="result">
+                    <div class="prediction-class">🎯 Predicted: ${data.prediction}</div>
+                    
+                    <div class="metrics">
+                        <div class="metric">
+                            <div class="metric-label">Confidence</div>
+                            <div class="metric-value" style="color: ${confidenceColor}">${data.confidence.toFixed(1)}%</div>
+                        </div>
+                        <div class="metric">
+                            <div class="metric-label">Uncertainty</div>
+                            <div class="metric-value">${uncertaintyLevel} (${data.uncertainty.toFixed(3)})</div>
+                        </div>
+                    </div>
+                    
+                    <div class="description">
+                        💬 "${data.description}"
+                    </div>
+                    
+                    <div style="margin-top: 15px; font-size: 0.9em; color: #666;">
+                        📁 File: ${data.filename}
+                    </div>
+                </div>
+            `;
+        }
+        
+        function showError(message) {
+            const resultEl = document.getElementById('result');
+            resultEl.innerHTML = `
+                <div class="result error">
+                    <div style="font-size: 1.2em; margin-bottom: 10px;">❌ Error</div>
+                    <div>${message}</div>
+                </div>
+            `;
+        }
+        
+        async function testHealthEndpoint() {
+            try {
+                const response = await fetch(`${API_BASE}/health`);
+                const data = await response.json();
+                showResult({
+                    prediction: `Health Status: ${data.status.toUpperCase()}`,
+                    confidence: data.models_loaded ? 100 : 0,
+                    uncertainty: 0,
+                    description: `Models loaded: ${data.models_loaded}`,
+                    filename: 'health-check'
+                });
+            } catch (error) {
+                showError(`Health check failed: ${error.message}`);
+            }
+        }
+        
+        async function testModelInfo() {
+            try {
+                const response = await fetch(`${API_BASE}/model_info`);
+                const data = await response.json();
+                showResult({
+                    prediction: data.model_name,
+                    confidence: 100,
+                    uncertainty: 0,
+                    description: `Input shape: ${data.input_shape.join('x')}, Classes: ${data.class_names.join(', ')}`,
+                    filename: 'model-info'
+                });
+            } catch (error) {
+                showError(`Model info failed: ${error.message}`);
+            }
+        }
+    </script>
+</body>
+</html>
