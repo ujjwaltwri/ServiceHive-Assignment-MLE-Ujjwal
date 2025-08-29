@@ -9,3 +9,5 @@ pandas
 google-generativeai
 python-multipart
 Pillow
+pytest
+httpx
