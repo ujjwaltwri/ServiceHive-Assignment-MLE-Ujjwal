@@ -16,9 +16,9 @@ The entire service is exposed via a REST API, built with FastAPI, and is fully c
 2. Features
 High-Accuracy Image Classification: Utilizes a fine-tuned EfficientNetV2B0 model achieving ~92.8% validation accuracy, surpassing the ≥85% requirement.
 
-Dynamic Scene Description: Integrates with the Google Gemini 1.5 Flash API to generate unique, context-aware descriptions for each image prediction.
+Dynamic Scene Description: Integrates with the Google Gemini 1.5 Flash API to generate unique, context-aware descriptions.
 
-Uncertainty Estimation: Implements Monte-Carlo Dropout to provide a quantifiable uncertainty score for each prediction.
+Uncertainty Estimation: Implements Predictive Entropy, a robust uncertainty metric calculated from the model's softmax output.
 
 RESTful API: A robust API built with FastAPI featuring /health, /model_info, and /predict endpoints.
 
@@ -37,10 +37,32 @@ Deployment: Docker, Docker Compose, Uvicorn
 
 Frontend: HTML, CSS, JavaScript
 
-4. Setup and Installation
-Prerequisites
+4. Project Structure
+The project follows the directory structure outlined in the assignment brief:
 
-Python 3.9+
+├── Dockerfile
+├── README.md
+├── SIC/
+│   └── api/
+│       └── main.py
+├── data/
+│   └── (Downloaded Dataset)
+├── docs/
+│   └── technical_report.md
+├── frontend/
+│   └── index.html
+├── models/
+│   └── efficientnet_final_model.keras
+├── notebooks/
+│   ├── eda.ipynb
+│   ├── training.ipynb
+│   └── evaluation.ipynb
+├── requirements.txt
+└── tests/
+    └── test_api.py
+
+5. Setup and Running the Application
+Prerequisites
 
 Docker and Docker Compose
 
@@ -50,7 +72,8 @@ Instructions
 
 Clone the Repository:
 
-git clone [https://github.com/your-username/ServiceHive-Assignment-MLE-Ujjwal.git](https://github.com/your-username/ServiceHive-Assignment-MLE-Ujjwal.git)
+# Replace with your final repository URL
+git clone [https://github.com/ujjwaltwri/ServiceHive-Assignment-MLE-Ujjwal.git](https://github.com/ujjwaltwri/ServiceHive-Assignment-MLE-Ujjwal.git)
 cd ServiceHive-Assignment-MLE-Ujjwal
 
 Set Up Environment Variables:
@@ -61,31 +84,12 @@ Add your Gemini API key to this file:
 
 GEMINI_API_KEY=YOUR_API_KEY_HERE
 
-(Optional) Local Python Environment:
-
-Create and activate a virtual environment:
-
-python -m venv .venv
-source .venv/bin/activate
-
-Install dependencies from the provided requirements.txt file:
-
-pip install -r requirements.txt
-
-5. Running the Application
-Method 1: Docker (Recommended)
-
-This is the simplest way to run the entire application. It builds the Docker image and starts the container.
+Run with Docker:
+This is the simplest way to run the entire application.
 
 docker compose up --build
 
-The API will be available at http://127.0.0.1:8000.
-
-Method 2: Local Development Server
-
-Make sure your virtual environment is activated and your .env file is created.
-
-python -m uvicorn SIC.api.main:app --reload --reload-dir SIC
+The API will be available at http://12_7.0.0.1:8000.
 
 6. Usage
 Interactive Frontend
@@ -98,9 +102,21 @@ API Documentation
 FastAPI provides automatic interactive documentation (Swagger UI). To access it, go to:
 http://127.0.0.1:8000/docs
 
-You can test all the API endpoints directly from this page, including file uploads to the /predict endpoint.
-
 7. Running Tests
-To run the automated unit tests, ensure your virtual environment is active and run pytest from the main project directory:
+To run the automated unit tests, you must first set up a local Python environment.
 
+# Set up and activate a virtual environment
+python -m venv .venv
+source .venv/bin/activate
+
+# Install dependencies
+pip install -r requirements.txt
+
+# Run pytest
 python -m pytest
+
+8. Citations
+Dataset: Puneet Singh, "Intel Image Classification", Kaggle, Version 2, https://www.kaggle.com/datasets/puneet6060/intel-image-classification
+
+Pre-trained Model: The EfficientNetV2B0 model architecture with weights pre-trained on the ImageNet dataset was sourced from the Keras Applications library within TensorFlow.
+
