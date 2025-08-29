@@ -1,0 +1,24 @@
+Test Accuracy: 0.9100
+
+Classification Report:
+              precision    recall  f1-score   support
+
+   buildings     0.9070    0.9153    0.9112       437
+      forest     0.9937    0.9937    0.9937       474
+     glacier     0.8304    0.8499    0.8400       553
+    mountain     0.8789    0.8152    0.8458       525
+         sea     0.9364    0.9824    0.9589       510
+      street     0.9256    0.9182    0.9218       501
+
+    accuracy                         0.9100      3000
+   macro avg     0.9120    0.9124    0.9119      3000
+weighted avg     0.9098    0.9100    0.9095      3000
+
+
+Per-Class Accuracy:
+buildings: 0.9153
+forest: 0.9937
+glacier: 0.8499
+mountain: 0.8152
+sea: 0.9824
+street: 0.9182
